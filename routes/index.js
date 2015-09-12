@@ -1,52 +1,35 @@
 var express = require('express');
 var router = express.Router();
+var mongoose = require('mongoose');
+var Movie = require('../models/movie');
+var _ = require('underscore');
+
+mongoose.connect('mongodb://localhost/movie');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', {
-    title: '我的电影 首页',
-    movies: [{
-      title:'奇妙世纪 08 梦的还原器',
-      _id: 1,
-      poster:'http://r3.ykimg.com/05410408548589706A0A4160AF2742DF'
-    },{
-      title:'奇妙世纪 08 梦的还原器',
-      _id: 2,
-      poster:'http://r3.ykimg.com/05410408548589706A0A4160AF2742DF'
-    },{
-      title:'奇妙世纪 08 梦的还原器',
-      _id: 3,
-      poster:'http://r3.ykimg.com/05410408548589706A0A4160AF2742DF'
-    },{
-      title:'奇妙世纪 08 梦的还原器',
-      _id: 4,
-      poster:'http://r3.ykimg.com/05410408548589706A0A4160AF2742DF'
-    },{
-      title:'奇妙世纪 08 梦的还原器',
-      _id: 5,
-      poster:'http://r3.ykimg.com/05410408548589706A0A4160AF2742DF'
-    },{
-      title:'奇妙世纪 08 梦的还原器',
-      _id: 6,
-      poster:'http://r3.ykimg.com/05410408548589706A0A4160AF2742DF'
-    }]
+  Movie.fetch(function(err, movies) {
+    if (err) {
+      console.log('--------------' + err + '---------------');
+    }
+    res.render('index', {
+      title: '我的电影 首页',
+      movies: movies
+    });
   });
 });
 
 /* GET detail page. */
 router.get('/movie/:id', function(req, res, next) {
-  res.render('detail', {
-    title: '我的电影 详情页',
-    movie: {
-      title: '机器战警',
-      director: '何塞.帕迪利亚',
-      country: '美国',
-      year: 2014,
-      language: '英语',
-      poster: 'http://r3.ykimg.com/05410408548589706A0A4160AF2742DF',
-      flash: 'http://player.youku.com/player.php/sid/XODQ0NDk4MTA0/v.swf',
-      summary: '她说好看，他又说不好看，到底好看不好看，你来你说了算！！！'
+  var id = req.params.id;
+  Movie.findById(id, function(err, movie) {
+    if (err) {
+      console.log('--------------' + err + '---------------');
     }
+    res.render('detail', {
+      title: '我的电影' + movie.title,
+      movie: movie
+    });
   });
 });
 
@@ -67,21 +50,71 @@ router.get('/admin/movie', function(req, res, next) {
   });
 });
 
+/* POST admin page. */
+router.post('/admin/movie/create', function(req, res, next) {
+  console.log('-------------- admin create movie ------------');
+  var id = req.body.movie_id;
+  console.log('---------- id: ' + id + "------------")
+  var newMovie = req.body.movie;
+  var _movie;
+  if (id) {
+    console.log('------------ update -------------');
+    Movie.findById(id, function(err, movie) {
+      if (err) {
+        console.log('--------------' + err + '---------------');
+      }
+      _movie = _.extend(movie, newMovie);
+      _movie.save(function(err, movie) {
+          if (err) {
+            console.log('--------------' + err + '---------------');
+          }
+          res.redirect('/movie/' + movie._id);
+      });
+    });
+  } else {
+    console.log('------------ create -------------');
+    console.log('--------- title -------' + req.body.movie.title);
+    _movie = new Movie({
+      title: newMovie.title,
+      director: newMovie.director,
+      country: newMovie.country,
+      language: newMovie.language,
+      year: newMovie.year,
+      poster: newMovie.poster,
+      flash: newMovie.flash,
+      summary: newMovie.summary
+    });
+    _movie.save(function(err, movie) {
+      if (err) {
+        console.log('--------------' + err + '---------------');
+      }
+      res.redirect('/movie/' + movie._id);
+    });
+  }
+});
+
+router.get('/admin/update/:id', function(req, res, next) {
+  var id = req.params.id;
+  if (id) {
+    Movie.findById(id, function(err, movie) {
+      res.render('admin', {
+        title: '我的电影后台更新服务',
+        movie: movie
+      });
+    });
+  }
+});
+
 /* GET list page. */
 router.get('/admin/list', function(req, res, next) {
-  res.render('list', {
-    title: '我的电影 列表页',
-    movies: [{
-      _id: 1,
-      title: '机器战警',
-      director: '何塞.帕迪利亚',
-      country: '美国',
-      year: 2014,
-      language: '英语',
-      poster: 'http://r3.ykimg.com/05410408548589706A0A4160AF2742DF',
-      flash: 'http://player.youku.com/player.php/sid/XODQ0NDk4MTA0/v.swf',
-      summary: '她说好看，他又说不好看，到底好看不好看，你来你说了算！！！'
-    }]
+  Movie.fetch(function(err, movies) {
+    if (err) {
+      console.log('--------------' + err + '---------------');
+    }
+    res.render('list', {
+      title: '我的电影 列表页',
+      movies: movies
+    });
   });
 });
 

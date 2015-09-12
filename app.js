@@ -18,10 +18,13 @@ app.set('view engine', 'jade');
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+//默认extended为false，那么在后台获取表单对象时，获取不到值
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 //静态资源例如js，css统一从public文件下查找
 app.use(express.static(path.join(__dirname, 'public')));
+//设置格式化时间
+app.locals.moment = require('moment');
 
 app.use('/', routes);
 app.use('/users', users);

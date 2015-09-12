@@ -2,7 +2,8 @@
  * Created by Jihann on 2015/9/12.
  */
 var mongoose = require('mongoose');
-var MovieSchema = new mongoose.Schema({
+var Schema = mongoose.Schema;
+var MovieSchema = new Schema({
     title: String,
     director: String,
     country: String,
@@ -10,6 +11,7 @@ var MovieSchema = new mongoose.Schema({
     poster: String,
     flash: String,
     year: Number,
+    summary: String,
     meta: {
       createdAt: {
           type: Date,
@@ -19,8 +21,7 @@ var MovieSchema = new mongoose.Schema({
           type: Date,
           default: Date.now()
       }
-    },
-    summary: String
+    }
 });
 
 MovieSchema.pre('save', function(next) {
@@ -29,21 +30,20 @@ MovieSchema.pre('save', function(next) {
     } else {
         this.meta.updateAt = Date.now();
     }
-    this.next();
+    next();
 });
 
 MovieSchema.statics = {
-  fetch: function(callback) {
+  fetch: function(cb) {
     return this
         .find({})
         .sort('meta.updateAt')
-        exec(callback);
+        .exec(cb);
   },
-  findById: function(id, callback) {
+  findById: function(id, cb) {
     return this
         .findOne({_id: id})
-        .sort('meta.updateAt')
-        exec(callback);
+        .exec(cb);
   }
 };
 
