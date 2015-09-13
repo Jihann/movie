@@ -3,12 +3,20 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
+var session = require('express-session');
+//把session会话状态信息保存在mongodb中
+var MongoStore = require('connect-mongo')(session);
 var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var app = express();
+
+var dbUrl = 'mongodb://localhost/movie';
+//连接mongodb
+mongoose.connect(dbUrl);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views/pages'));
@@ -21,6 +29,14 @@ app.use(bodyParser.json());
 //默认extended为false，那么在后台获取表单对象时，获取不到值
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+//设置session
+app.use(session({
+  secret: 'movie',
+  store: new MongoStore({
+    url: dbUrl,
+    collection: 'sessions'
+  })
+}));
 //静态资源例如js，css统一从public文件下查找
 app.use(express.static(path.join(__dirname, 'public')));
 //设置格式化时间
@@ -48,6 +64,10 @@ if (app.get('env') === 'development') {
       error: err
     });
   });
+  //让HTML代码变得整齐, 默认返回的HTML代码是合并在一起的;
+  app.locals.pretty = true;
+  //打印mongoose语句
+  mongoose.set("debug", true);
 }
 
 // production error handler

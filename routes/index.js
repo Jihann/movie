@@ -1,21 +1,25 @@
 var express = require('express');
 var router = express.Router();
-var mongoose = require('mongoose');
 var Movie = require('../models/movie');
+var User = require('../models/user');
 var _ = require('underscore');
-
-//连接mongodb
-mongoose.connect('mongodb://localhost/movie');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
+  console.log('------------- user session -------------');
+  console.log(req.session.user);
+  var currentUser = req.session.user;
+  if (currentUser) {
+    //todo 设置到全局中
+  }
   Movie.fetch(function(err, movies) {
     if (err) {
       console.log('--------------' + err + '---------------');
     }
     res.render('index', {
       title: '等风来电影首页',
-      movies: movies
+      movies: movies,
+      user: currentUser
     });
   });
 });
@@ -132,6 +136,75 @@ router.delete('/admin/delete', function(req, res, next) {
         }
     });
   }
+});
+
+//登录
+router.post('/user/signin', function(req, res, next) {
+  var _user = req.body.user;
+  var username = _user.username;
+  var password = _user.password;
+  User.findOne({username: username}, function(err, user) {
+    if (err) {
+      console.log(err);
+    }
+    if (!user) {
+      console.log('------------- user is not exists ------------');
+      return res.redirect('/');
+    }
+    if (user.password !== password) {
+      console.log('------------- password is not matched ------------');
+      return res.redirect('/');
+    } else {
+      console.log('------------- password is matched ------------');
+      req.session.user = user; //保持当前会话状态
+      return res.redirect('/');
+    }
+  });
+});
+
+//注册
+router.post('/user/signup', function(req, res, next) {
+  var _user = req.body.user;
+  console.log(_user);
+  //将前面的User.find方法改成User.findOne就ok了，
+  // find返回的是 '列表'，没找到就是[], findOne返回的是单个对象，没找到匹配就是null
+  User.findOne({username: _user.username}, function(err, user) {
+    console.log(user);
+    if (err) {
+      console.log(err);
+    }
+    if (user) {
+      console.log('------------ user is not null ----------')
+      return res.redirect('/');
+    }
+    var user = new User(_user);
+    user.save(function(err, user) {
+      if (err) {
+        console.log('--------------' + err + '--------------');
+      }
+      res.redirect('/admin/userlist');
+    });
+  });
+});
+
+//logout
+router.get('/logout', function(req, res, next) {
+  delete req.session.user;
+  return res.redirect('/');
+});
+
+/* GET userlist page. */
+router.get('/admin/userlist', function(req, res, next) {
+  console.log('-------------- userlist ------------');
+  User.fetch(function(err, users) {
+    if (err) {
+      console.log('--------------' + err + '---------------');
+    }
+    res.render('user_list', {
+      title: '等风来-用户列表页',
+      users: users
+    });
+  });
 });
 
 module.exports = router;
