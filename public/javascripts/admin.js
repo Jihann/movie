@@ -11,7 +11,7 @@ jQuery(function() {
        var $tr = jQuery('.item-id-' + id); //当前当前行元素
        jQuery.ajax({
           type: 'DELETE',
-          url: '/admin/delete?id=' + id
+          url: '/admin/movie/delete?id=' + id
        }).done(function(results) {
             if (results.success === 1) {
                 if ($tr.length > 0) {

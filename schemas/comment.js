@@ -3,21 +3,29 @@
  */
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-var UserSchema = new Schema({
-    username: {
-       unique: true,
-       type: String
+var ObjectId = Schema.Types.ObjectId;
+
+var CommentSchema = new Schema({
+    movie: {
+      type: ObjectId,
+      ref: 'Movie'
     },
-    // 0: nomal user
-    // 1: verified user
-    // 2: professonal user
-    // >10: admin
-    // >50: super admin
-    role: {
-        type: Number,
-        default: 0
+    from: {
+      type: ObjectId,
+      ref: 'User'
     },
-    password: String,
+    reply: [{
+      from: {
+          type: ObjectId,
+          ref: 'User'
+      },
+      to: {
+          type: ObjectId,
+          ref: 'User'
+      },
+      content: String
+    }],
+    content: String,
     meta: {
       createdAt: {
           type: Date,
@@ -30,7 +38,7 @@ var UserSchema = new Schema({
     }
 });
 
-UserSchema.pre('save', function(next) {
+CommentSchema.pre('save', function(next) {
     if (this.isNew) {
         this.meta.createdAt = this.meta.updateAt = Date.now();
     } else {
@@ -39,7 +47,7 @@ UserSchema.pre('save', function(next) {
     next();
 });
 
-UserSchema.statics = {
+CommentSchema.statics = {
   fetch: function(cb) {
     return this
         .find({})
@@ -53,4 +61,4 @@ UserSchema.statics = {
   }
 };
 
-module.exports = UserSchema;
+module.exports = CommentSchema;
