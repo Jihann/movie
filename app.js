@@ -8,6 +8,8 @@ var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
+//node 上传第三方中间件
+var multer  = require('multer'); //版本问题，装0.1.8
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
@@ -41,6 +43,7 @@ app.use(session({
 app.use(express.static(path.join(__dirname, 'public')));
 //设置格式化时间
 app.locals.moment = require('moment');
+app.use(multer());
 
 app.use('/', routes);
 app.use('/users', users);

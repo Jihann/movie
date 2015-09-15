@@ -3,12 +3,21 @@
  */
 var Movie = require('../models/movie');
 var Comment = require('../models/comment');
+var Tag = require('../models/tag');
 var _ = require('underscore');
+//上传
+var fs = require('fs');
+var path = require('path');
 
 /* GET detail page. */
 exports.detail = function(req, res, next) {
     var id = req.params.id;
     var currentUser = req.session.user;
+    Movie.update({_id: id}, {$inc: {pv: 1}}, function(err) {
+        if (err) {
+            console.log(err);
+        }
+    });
     Movie.findById(id, function(err, movie) {
         Comment
             .find({movie: id})
@@ -31,28 +40,62 @@ exports.detail = function(req, res, next) {
 
 /* GET admin page. */
 exports.new = function(req, res, next) {
-    res.render('admin', {
-        title: '等风来-后台录入页',
-        movie: {
-            title: '',
-            director: '',
-            country: '',
-            year: '',
-            language: '',
-            poster: '',
-            flash: '',
-            summary: ''
+    Tag.find({}, function(err, tags) {
+        if (err) {
+            console.log(err);
         }
+        res.render('admin', {
+            title: '等风来-后台录入页',
+            movie: {
+                title: '',
+                director: '',
+                country: '',
+                year: '',
+                language: '',
+                poster: '',
+                flash: '',
+                summary: '',
+                tagName: ''
+            },
+            tags: tags
+        });
     });
+};
+
+//上传图片
+exports.savePoster = function(req, res, next) {
+    var posterData = req.files.uploadPoster;
+    var filePath = posterData.path;
+    var originalname = posterData.originalname;
+
+    if (originalname) {
+        console.log('------------- 上传 --------------');
+        fs.readFile(filePath, function(err, data) {
+            var timestamp = Date.now();
+            var type = posterData.mimetype.split('/')[1];
+            console.log('-----------文件类型为：' + type + '-------------');
+            var poster = timestamp + '.' + type;
+            var newPath = path.join(__dirname, '../', '/public/upload/' + poster);
+            fs.writeFile(newPath, data, function(err) {
+                req.poster = poster;
+                next();
+            });
+        });
+    } else {
+        next();
+    }
 };
 
 /* POST admin page. */
 exports.save = function(req, res, next) {
     console.log('-------------- admin create movie ------------');
-    var id = req.body.movie_id;
+    var id = req.body.movie._id;
     console.log('---------- id: ' + id + "------------")
     var newMovie = req.body.movie;
     var _movie;
+    if (req.poster) {
+        newMovie.poster = req.poster;
+    }
     if (id) {
         console.log('------------ update -------------');
         Movie.findById(id, function(err, movie) {
@@ -70,21 +113,36 @@ exports.save = function(req, res, next) {
     } else {
         console.log('------------ create -------------');
         console.log('--------- title -------' + req.body.movie.title);
-        _movie = new Movie({
-            title: newMovie.title,
-            director: newMovie.director,
-            country: newMovie.country,
-            language: newMovie.language,
-            year: newMovie.year,
-            poster: newMovie.poster,
-            flash: newMovie.flash,
-            summary: newMovie.summary
-        });
+        _movie = new Movie(newMovie);
+        var tagId = newMovie.tag;
+        var tagName = newMovie.tagName;
         _movie.save(function(err, movie) {
             if (err) {
                 console.log('--------------' + err + '---------------');
             }
-            res.redirect('/movie/' + movie._id);
+            if (tagId) {
+                Tag.findById(tagId, function(err, tag) {
+                    tag.movies.push(movie._id);
+                    console.log(movie._id);
+                    tag.save(function(err, tag) {
+                        res.redirect('/movie/' + movie._id);
+                    });
+                });
+            } else if (tagName) {
+                var tag = new Tag({
+                    name: tagName,
+                    movies: [movie._id]
+                });
+                tag.save(function(err, tag) {
+                   if (err) {
+                       console.log(err);
+                   }
+                    movie.tag = tag._id;
+                    movie.save(function(err, movie) {
+                        res.redirect('/movie/' + movie._id);
+                    });
+                });
+            }
         });
     }
 };
@@ -93,9 +151,12 @@ exports.update = function(req, res, next) {
     var id = req.params.id;
     if (id) {
         Movie.findById(id, function(err, movie) {
-            res.render('admin', {
-                title: '我的电影后台更新服务',
-                movie: movie
+            Tag.find({}, function(err, tags) {
+                res.render('admin', {
+                    title: '我的电影后台更新服务',
+                    movie: movie,
+                    tags: tags
+                });
             });
         });
     }

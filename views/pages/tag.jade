@@ -1,0 +1,12 @@
+extends ../layout
+block content
+  .container
+    .row
+      form.form-horizontal(method="post", action="/admin/tag/create")
+        .form-group
+          label.col-sm-2.control-label(for="inputTag")  电影分类
+          .col-sm-10
+            input#inputTag.form-control(type="text", name="tag[name]", value="#{tag.name}")
+        .form-group
+          .col-sm-offset-2.col-sm-10
+            button.btn.btn-default(type="submit") 录入

@@ -2,8 +2,26 @@ extends ../layout
 block content
   .container
     .row
-      form.form-horizontal(method="post", action="/admin/movie/create")
-        input(type="hidden" name="movie[_id]" value="#{movie._id}")
+      form.form-horizontal(method="post", action="/admin/movie/create", enctype="multipart/form-data")
+        .form-group
+          label.col-sm-2.control-label  豆瓣同步
+          .col-sm-10
+            input#douban(type="text")
+        if movie._id
+          input(type="hidden" name="movie[_id]" value="#{movie._id}")
+        .form-group
+          label.col-sm-2.control-label(for="inputTag")  电影分类
+          .col-sm-10
+            input#inputTag.form-control(type="text", name="movie[tagName]", value="#{movie.tagName}")
+        .form-group
+          label.col-sm-2.control-label  电影分类
+          each tag in tags
+            label.radio-inline
+              if movie._id
+                input(type="radio", name="movie[tag]", value="#{tag._id}", checked="#{tag._id}.toString()==movie.tag.toString()")
+              else
+                input(type="radio", name="movie[tag]", value="#{tag._id}")
+              | #{tag.name}
         .form-group
           label.col-sm-2.control-label(for="inputTitle")  电影名称
           .col-sm-10
@@ -11,7 +29,7 @@ block content
         .form-group
           label.col-sm-2.control-label(for="inputDoctor")  导演
           .col-sm-10
-            input#inputDoctor.form-control(type="text", name="movie[director]", value="#{movie.director}")
+            input#inputDirector.form-control(type="text", name="movie[director]", value="#{movie.director}")
         .form-group
           label.col-sm-2.control-label(for="inputCountry")  国家
           .col-sm-10
@@ -24,6 +42,10 @@ block content
           label.col-sm-2.control-label(for="inputPoster")  海报地址
           .col-sm-10
             input#inputPoster.form-control(type="text", name="movie[poster]", value="#{movie.poster}")
+        .form-group
+          label.col-sm-2.control-label(for="uploadPoster")  海报上传
+          .col-sm-10
+            input#uploadPoster(type="file", name="uploadPoster")
         .form-group
           label.col-sm-2.control-label(for="inputFlash")  片源地址
           .col-sm-10
@@ -39,3 +61,4 @@ block content
         .form-group
           .col-sm-offset-2.col-sm-10
             button.btn.btn-default(type="submit") 录入
+  script(src="/javascripts/admin.js")
