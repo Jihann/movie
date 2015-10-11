@@ -8,17 +8,19 @@ var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
+//导入配置项
+var setting = require('./config/setting');
 //node 上传第三方中间件
 var multer  = require('multer'); //版本问题，装0.1.8
 
+//导入路由
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var app = express();
 
-var dbUrl = 'mongodb://localhost/movie';
 //连接mongodb
-mongoose.connect(dbUrl);
+mongoose.connect(setting.dbUrl);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views/pages'));
@@ -35,7 +37,7 @@ app.use(cookieParser());
 app.use(session({
   secret: 'movie',
   store: new MongoStore({
-    url: dbUrl,
+    url: setting.dbUrl,
     collection: 'sessions'
   })
 }));
