@@ -1,0 +1,77 @@
+extends layout
+block content
+    h3 markdown
+    :markdown
+      Hi, this is **study markdown** [link](http://www.baidu.com)
+    h3 模板继承
+    h2 mixin
+    mixin hello
+        p hello world
+    +hello
+    mixin show(name, lessons)
+      p #{name}
+      ul.lessons
+        each less in lessons
+          li= less
+    +show('Jihann', ['jade', 'express'])
+    mixin group(student)
+      h4 #{student.name}
+      +show(student.name, student.lessons)
+    +group({name: 'Jihann', lessons: ['java', 'go']})
+    h2 流程
+    h3 for each
+    - var users = {name : 'Jihann', age : 22}
+    - for (var k in users)
+      p= users[k]
+    - each value, key in users
+      p #{key} : #{value}
+    - var courses = ['java', 'c#', 'go']
+
+    mixin team(msg)
+      h4 #{msg}
+      if block
+        block
+      else
+        p no team
+    +team('How old are you ?')
+      p i'am 22
+
+    each item in courses
+      p= item
+    h3 if else
+    - var isFlag = true
+    - var lessons = ['node', 'node']
+    if lessons
+        if lessons.length > 2
+          p #{lessons.join(', ')}
+        else if lessons.length > 1
+          p #{lessons.join(', ')}
+        else
+          p i'am sorry
+    else
+        p i'm sorry
+    h3 unless
+    unless !isFlag
+        p #{lessons.length}
+    h2 注释
+    h3 单行注释
+    //  h3#title.title  jade is very good
+    section
+    h3 非缓冲注释
+    #show.class1(class='class2')
+    div#id.class1.class2
+        a(href='http://www.baidu.com', target='_blank') link
+    //-  #id.classname
+    h3 块注释
+    //-
+        p
+            a(href='http://www.baidu.com',title='baidu',data-uid='1000') link
+            input(name='username', type='text', value='zhangsan')
+            input(name='type', type='checkbox', checked)
+    - var message = 'this is jade'
+    p= message
+    input(type='text' value='#{data}')
+    input(type='text' value=username)
+    ul
+    strong
+    hr
